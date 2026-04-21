@@ -103,7 +103,7 @@ const TURNSTILE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
       </div>
 
       <ul class="milestones">
-        {milestones.map((m) => (
+        {[...milestones].reverse().map((m) => (
           <li>
             <strong>${m.amount} — {m.label}</strong>
             <br />
