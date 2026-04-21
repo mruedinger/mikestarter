@@ -172,7 +172,11 @@ const TURNSTILE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
           </label>
         </div>
         {TURNSTILE_KEY && (
-          <div class="field cf-turnstile" data-sitekey={TURNSTILE_KEY}></div>
+          <div
+            class="field cf-turnstile"
+            data-sitekey={TURNSTILE_KEY}
+            data-appearance="interaction-only"
+          ></div>
         )}
         <button type="submit">Pledge</button>
         <p id="pledge-status" class="muted" aria-live="polite"></p>
