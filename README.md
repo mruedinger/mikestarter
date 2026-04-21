@@ -6,7 +6,7 @@ for hosting, [Cloudflare D1](https://developers.cloudflare.com/d1/) for storage,
 and [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/)
 for the admin login.
 
-Live at <https://mike.rued.ing>.
+Live at <https://grunglebird.com>.
 
 ## What it does
 
@@ -57,31 +57,54 @@ so you can test the admin page locally.
    npm run db:migrate:remote
    ```
 
+   If your `CLOUDFLARE_API_TOKEN` doesn't have D1 write scope, paste the contents
+   of `migrations/0001_init.sql` into the D1 Console in the dashboard instead.
+
 3. **Create a Cloudflare Pages project** and connect this repo (or do a direct
    upload via `npm run deploy`). In the Pages dashboard:
 
    - Build command: `npm run build`
    - Build output directory: `dist`
-   - Bind D1: variable name `DB`, database `mikestarter`
-   - Environment variables (Production):
-     - `TURNSTILE_SECRET_KEY` — from your Turnstile widget
-     - `PUBLIC_TURNSTILE_SITE_KEY` — same widget's site key (build-time)
-   - **Do not** set `DEV` in production
+   - Bind D1: variable name `DB`, database `mikestarter` (Settings → Functions)
 
-4. **Custom domain**: in Pages → Custom domains, add `mike.rued.ing`.
-   Cloudflare adds the CNAME automatically since `rued.ing` is on Cloudflare.
+   Env vars on this project are managed through `wrangler.toml`, not the
+   dashboard, because it declares bindings. Concretely:
 
-5. **Protect the admin route with Cloudflare Access**:
+   - `PUBLIC_TURNSTILE_SITE_KEY` — declared under `[vars]` in `wrangler.toml`
+     (it's public — it ships in the HTML). Set the real value there, commit,
+     push to trigger a rebuild.
+   - `TURNSTILE_SECRET_KEY` — set as an encrypted **Secret** in the Pages
+     dashboard (Settings → Environment variables). Secrets stay in the dashboard
+     even when bindings live in `wrangler.toml`.
+   - **Do not** set `DEV` in production.
+
+4. **Custom domain**: in Pages → Custom domains, add your domain (e.g.
+   `grunglebird.com`). Cloudflare adds the CNAME automatically if the domain
+   is on Cloudflare.
+
+5. **Protect the admin routes with Cloudflare Access**:
    Zero Trust dashboard → Access → Applications → Add a self-hosted application.
 
-   - Application domain: `mike.rued.ing`
-   - Path: `/admin` (add a second application for `/api/admin/*`)
-   - Identity provider: Google (or whichever you prefer)
-   - Policy: allow only your email
+   - Application domain: your site's domain
+   - Paths (add all three on the same application):
+     - `/admin`
+     - `/admin/*`
+     - `/api/admin/*`
+   - Identity provider: Google (requires a Google Cloud OAuth client — set up
+     the OAuth consent screen and credentials first, then wire the client ID
+     and secret under Zero Trust → Settings → Authentication → Login methods).
+     OneTimePin is simpler if you don't want to set up Google.
+   - Policy: `Allow` with an email rule listing you (and any co-admins).
+
+   The admin API (`functions/api/admin/*`) reads the `cf-access-jwt-assertion`
+   header injected by Access to confirm the request was authorized upstream.
 
 6. **Turnstile**: create a new widget at
-   <https://dash.cloudflare.com/?to=/:account/turnstile>, add `mike.rued.ing` as
-   the hostname, and copy the site/secret keys into the Pages env vars above.
+   <https://dash.cloudflare.com/?to=/:account/turnstile>, list your site's
+   hostname(s) under "Hostnames" (e.g. `grunglebird.com`), and copy:
+
+   - Site key → `[vars]` block in `wrangler.toml` as `PUBLIC_TURNSTILE_SITE_KEY`
+   - Secret key → Pages dashboard as a Secret named `TURNSTILE_SECRET_KEY`
 
 ## Project layout
 
