@@ -1,0 +1,23 @@
+{
+  "name": "mikes-beach-bar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev ./dist",
+    "deploy": "astro build && wrangler pages deploy ./dist",
+    "db:migrate:local": "wrangler d1 migrations apply mikes-beach-bar --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mikes-beach-bar --remote",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^3.80.0"
+  }
+}

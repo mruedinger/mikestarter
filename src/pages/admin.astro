@@ -1,0 +1,146 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Admin — Mike's Beach Bar">
+  <main class="container">
+    <h1>Pledges (admin)</h1>
+    <p class="muted">
+      Total: <strong id="total">…</strong>
+    </p>
+    <div class="table-wrap">
+      <table id="pledges">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Venmo</th>
+            <th>Private</th>
+            <th>Paid</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="7" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    type AdminPledge = {
+      id: number;
+      name: string;
+      amount_cents: number;
+      venmo_handle: string;
+      is_private: 0 | 1;
+      is_paid: 0 | 1;
+      created_at: number;
+    };
+
+    const fmt = (c: number) => `$${(c / 100).toFixed(c % 100 === 0 ? 0 : 2)}`;
+    const escapeHtml = (s: string) =>
+      s.replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!),
+      );
+
+    const tbody = document.querySelector('#pledges tbody')!;
+
+    async function load() {
+      const res = await fetch('/api/admin/pledges');
+      if (!res.ok) {
+        tbody.innerHTML = `<tr><td colspan="7">Auth failed (${res.status}). Make sure you're signed in via Cloudflare Access.</td></tr>`;
+        return;
+      }
+      const { pledges, total_cents } = (await res.json()) as {
+        pledges: AdminPledge[];
+        total_cents: number;
+      };
+      const unpaid = pledges.filter((p) => !p.is_paid).reduce((s, p) => s + p.amount_cents, 0);
+      document.getElementById('total')!.textContent =
+        `${fmt(total_cents)} across ${pledges.length} pledge${pledges.length === 1 ? '' : 's'} (${fmt(unpaid)} unpaid)`;
+
+      tbody.innerHTML = '';
+      if (pledges.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">No pledges yet.</td></tr>';
+        return;
+      }
+      for (const p of pledges) {
+        const tr = document.createElement('tr');
+        if (p.is_paid) tr.classList.add('paid');
+        const date = new Date(p.created_at * 1000).toLocaleDateString();
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td class="amt">${fmt(p.amount_cents)}</td>
+          <td>@${escapeHtml(p.venmo_handle.replace(/^@+/, ''))}</td>
+          <td>${p.is_private ? 'yes' : 'no'}</td>
+          <td><label><input type="checkbox" data-id="${p.id}" class="paid-toggle" ${p.is_paid ? 'checked' : ''}/></label></td>
+          <td><button data-id="${p.id}" class="del">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      tbody.querySelectorAll<HTMLInputElement>('.paid-toggle').forEach((cb) => {
+        cb.addEventListener('change', async () => {
+          const r = await fetch(`/api/admin/pledges/${cb.dataset.id}`, {
+            method: 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ is_paid: cb.checked }),
+          });
+          if (!r.ok) {
+            alert('Update failed');
+            cb.checked = !cb.checked;
+          } else {
+            await load();
+          }
+        });
+      });
+
+      tbody.querySelectorAll<HTMLButtonElement>('.del').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this pledge?')) return;
+          const r = await fetch(`/api/admin/pledges/${btn.dataset.id}`, { method: 'DELETE' });
+          if (r.ok) await load();
+          else alert('Delete failed');
+        });
+      });
+    }
+
+    load();
+  </script>
+
+  <style>
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    th {
+      background: var(--sand-dark);
+      font-family: Georgia, serif;
+    }
+    td.amt { font-weight: 600; }
+    tr.paid td { opacity: 0.55; text-decoration: line-through; }
+    button.del {
+      background: transparent;
+      border: 1px solid var(--sunset);
+      color: var(--sunset);
+      padding: 0.25rem 0.6rem;
+      font-size: 0.85rem;
+    }
+    button.del:hover { background: var(--sunset); color: white; }
+  </style>
+</Layout>

@@ -1,0 +1,113 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = "Mike's Beach Bar",
+  description = "Help fund Mike's Beach Bar for our summer beach trip.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Limelight&family=Yellowtail&display=swap"
+      rel="stylesheet"
+    />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+    <style is:global>
+      :root {
+        --sand: #fff8eb;
+        --sand-dark: #f0d9a8;
+        --ocean: #00b4cc;
+        --ocean-dark: #006d7a;
+        --sun: #ffa726;
+        --sunset: #ff5252;
+        --ink: #26201a;
+        --ink-soft: #6a584a;
+        --paper: #fffcf3;
+        --line: #e8cea0;
+      }
+
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
+      html {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: var(--ink);
+        background: var(--sand);
+      }
+      body { margin: 0; line-height: 1.55; }
+      h1, h2, h3 {
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.15;
+        margin: 0 0 0.5em;
+      }
+      h1 {
+        font-family: "Bungee Shade", Georgia, serif;
+        font-weight: 400;
+        font-size: 2.75rem;
+        line-height: 1.2;
+        color: var(--sunset);
+      }
+      h2 {
+        font-family: "Yellowtail", Georgia, cursive, serif;
+        font-weight: 400;
+        font-size: 2.25rem;
+        line-height: 1.3;
+        margin-top: 2.5rem;
+        color: var(--ocean-dark);
+      }
+      h3 { font-size: 1.15rem; }
+      a { color: var(--ocean); }
+      p { margin: 0 0 1rem; }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+        text-align: center;
+      }
+      .card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1.25rem;
+      }
+      button, .button {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.7rem 1.25rem;
+        border-radius: 8px;
+        border: none;
+        background: var(--sunset);
+        color: white;
+        font-weight: 600;
+      }
+      button:hover { background: var(--sun); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      input[type="text"], input[type="number"] {
+        font: inherit;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        width: 100%;
+      }
+      input:focus { outline: 2px solid var(--ocean); outline-offset: 1px; }
+      label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+      .field { margin-bottom: 1rem; }
+      .muted { color: var(--ink-soft); font-size: 0.9rem; }
+    </style>
+  </body>
+</html>
