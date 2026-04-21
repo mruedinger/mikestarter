@@ -46,7 +46,7 @@ so you can test the admin page locally.
 1. **Create the D1 database**
 
    ```sh
-   npx wrangler d1 create mikes-beach-bar
+   npx wrangler d1 create mikestarter
    ```
 
    Copy the printed `database_id` into `wrangler.toml`.
@@ -62,7 +62,7 @@ so you can test the admin page locally.
 
    - Build command: `npm run build`
    - Build output directory: `dist`
-   - Bind D1: variable name `DB`, database `mikes-beach-bar`
+   - Bind D1: variable name `DB`, database `mikestarter`
    - Environment variables (Production):
      - `TURNSTILE_SECRET_KEY` — from your Turnstile widget
      - `PUBLIC_TURNSTILE_SITE_KEY` — same widget's site key (build-time)

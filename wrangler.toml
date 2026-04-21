@@ -1,10 +1,10 @@
-name = "mikes-beach-bar"
+name = "mikestarter"
 compatibility_date = "2025-04-01"
 pages_build_output_dir = "./dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "mikes-beach-bar"
-# Replace with the real database_id printed by `wrangler d1 create mikes-beach-bar`
-database_id = "REPLACE_ME_AFTER_RUNNING_D1_CREATE"
+database_name = "mikestarter"
+# Replace with the real database_id printed by `wrangler d1 create mikestarter`
+database_id = "c6efb0bc-5cde-4abb-8cd8-5096ca0f9675"
 migrations_dir = "migrations"

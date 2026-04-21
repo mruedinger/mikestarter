@@ -1,5 +1,5 @@
 {
-  "name": "mikes-beach-bar",
+  "name": "mikestarter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,8 +8,8 @@
     "build": "astro build",
     "preview": "wrangler pages dev ./dist",
     "deploy": "astro build && wrangler pages deploy ./dist",
-    "db:migrate:local": "wrangler d1 migrations apply mikes-beach-bar --local",
-    "db:migrate:remote": "wrangler d1 migrations apply mikes-beach-bar --remote",
+    "db:migrate:local": "wrangler d1 migrations apply mikestarter --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mikestarter --remote",
     "astro": "astro"
   },
   "dependencies": {
