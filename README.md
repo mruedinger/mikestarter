@@ -17,7 +17,7 @@ Live at <https://grunglebird.com>.
 - Public pledge list shows real names or "Anonymous"; Venmo handles are admin-only
 - Pledgers can edit or delete their own pledge from the same browser without
   signing in (capability cookie tied to a per-row edit token)
-- Public pledge writes have a small server-side rate limit to slow down spam
+- Public pledge writes have a small server-side rate limit (per-IP, not per-person) to slow down spam
 - Admin page (`/admin`) gated by Cloudflare Access — view all pledges with real
   names + Venmo handles, mark them paid, or delete them
 
