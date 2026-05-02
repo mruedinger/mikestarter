@@ -21,7 +21,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const rateLimited = await enforceRateLimit(request, env, 'pledge:create', 5, 60 * 60);
+  const rateLimited = await enforceRateLimit(request, env, 'pledge:create', 20, 60 * 60);
   if (rateLimited) return rateLimited;
 
   let body: unknown;

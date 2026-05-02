@@ -12,7 +12,7 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
   const cookie = parseEditCookie(request);
   if (!cookie || cookie.id !== id) return jsonError(403, 'Not allowed');
 
-  const rateLimited = await enforceRateLimit(request, env, 'pledge:edit', 10, 60 * 60);
+  const rateLimited = await enforceRateLimit(request, env, 'pledge:edit', 20, 60 * 60);
   if (rateLimited) return rateLimited;
 
   let body: unknown;
