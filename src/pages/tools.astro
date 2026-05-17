@@ -1,0 +1,380 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const ML_PER_OZ = 29.5735;
+
+type IngredientKey = 'water' | 'sugar' | 'peel' | 'citric' | 'malic' | 'salt';
+const INGREDIENTS: IngredientKey[] = ['water', 'sugar', 'peel', 'citric', 'malic', 'salt'];
+
+interface Recipe {
+  key: string;
+  title: string;
+  fruit: string;
+  fruitPlural: string;
+  peelLabel: string;
+  base: Record<IngredientKey, number>;
+  density: number;
+  juicePerFruit: number;
+  peelPerFruit: number;
+}
+
+const RECIPES: Recipe[] = [
+  {
+    key: 'lemonAid',
+    title: 'Lemon Aid',
+    fruit: 'lemon',
+    fruitPlural: 'lemons',
+    peelLabel: 'Lemon peel',
+    base: { water: 500, sugar: 30, peel: 30, citric: 27, malic: 3, salt: 1 },
+    density: 1.04,
+    juicePerFruit: 1.5,
+    peelPerFruit: 15,
+  },
+  {
+    key: 'limeSupport',
+    title: 'Lime Support',
+    fruit: 'lime',
+    fruitPlural: 'limes',
+    peelLabel: 'Lime peel',
+    base: { water: 500, sugar: 30, peel: 30, citric: 24, malic: 12, salt: 1 },
+    density: 1.045,
+    juicePerFruit: 0.75,
+    peelPerFruit: 7.5,
+  },
+];
+
+function compute(r: Recipe, scale = 1) {
+  const ing = {} as Record<IngredientKey, number>;
+  for (const k of INGREDIENTS) ing[k] = r.base[k] * scale;
+  const totalMass = INGREDIENTS.reduce((s, k) => s + ing[k], 0);
+  const peelMass = ing.peel;
+  const pseudoOz = (totalMass - peelMass) / r.density / ML_PER_OZ;
+  const fruitsRaw = peelMass / r.peelPerFruit;
+  const fruits = Math.round(fruitsRaw * 2) / 2;
+  const freshOz = fruits * r.juicePerFruit;
+  const totalOz = pseudoOz + freshOz;
+  return { ing, totalMass, peelMass, pseudoOz, fruitsRaw, fruits, freshOz, totalOz };
+}
+
+const fmtG = (x: number) => x.toFixed(1);
+const fmtOz = (x: number) => x.toFixed(2);
+
+const ingredientLabels: Record<IngredientKey, string> = {
+  water: 'Water',
+  sugar: 'Sugar',
+  peel: 'Peel',
+  citric: 'Citric acid',
+  malic: 'Malic acid',
+  salt: 'Sea salt',
+};
+---
+
+<Layout
+  title="Tools — Mike's Beach Bar"
+  description="Calculators for pseudo citrus juice recipes."
+>
+  <main class="container tools">
+    <h1>Tools</h1>
+    <h2>Recipe calculators</h2>
+    <p class="muted">
+      Edit any field — the rest of the recipe scales proportionally.
+    </p>
+
+    {
+      RECIPES.map((r) => {
+        const c = compute(r, 1);
+        const labels = { ...ingredientLabels, peel: r.peelLabel };
+        return (
+          <section
+            class="card calc"
+            data-recipe={r.key}
+            data-config={JSON.stringify({
+              base: r.base,
+              density: r.density,
+              juicePerFruit: r.juicePerFruit,
+              peelPerFruit: r.peelPerFruit,
+              fruit: r.fruit,
+              fruitPlural: r.fruitPlural,
+            })}
+          >
+            <h3>{r.title}</h3>
+            <div class="grid">
+              {INGREDIENTS.map((k) => (
+                <label class="field">
+                  <span>{labels[k]}</span>
+                  <div class="input-row">
+                    <input
+                      type="number"
+                      data-field={k}
+                      step="0.1"
+                      min="0"
+                      value={fmtG(c.ing[k])}
+                    />
+                    <span class="unit">g</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div class="divider" />
+            <div class="grid">
+              <label class="field">
+                <span>Pseudo juice yield</span>
+                <div class="input-row">
+                  <input
+                    type="number"
+                    data-field="pseudo"
+                    step="0.01"
+                    min="0"
+                    value={fmtOz(c.pseudoOz)}
+                  />
+                  <span class="unit">oz</span>
+                </div>
+              </label>
+              <label class="field">
+                <span>Fresh {r.fruit} juice</span>
+                <div class="input-row">
+                  <input
+                    type="number"
+                    data-field="fresh"
+                    step="0.01"
+                    min="0"
+                    value={fmtOz(c.freshOz)}
+                  />
+                  <span class="unit">oz</span>
+                </div>
+              </label>
+              <label class="field">
+                <span>Total yield</span>
+                <div class="input-row">
+                  <input
+                    type="number"
+                    data-field="total"
+                    step="0.01"
+                    min="0"
+                    value={fmtOz(c.totalOz)}
+                  />
+                  <span class="unit">oz</span>
+                </div>
+              </label>
+            </div>
+            <details class="math">
+              <summary>Show me the math</summary>
+              <div class="math-body" data-math />
+            </details>
+          </section>
+        );
+      })
+    }
+  </main>
+
+  <script is:inline>
+    (function () {
+      const ML_PER_OZ = 29.5735;
+      const INGREDIENTS = ['water', 'sugar', 'peel', 'citric', 'malic', 'salt'];
+
+      function compute(cfg, scale) {
+        const ing = {};
+        for (const k of INGREDIENTS) ing[k] = cfg.base[k] * scale;
+        const totalMass = INGREDIENTS.reduce((s, k) => s + ing[k], 0);
+        const peelMass = ing.peel;
+        const pseudoOz = (totalMass - peelMass) / cfg.density / ML_PER_OZ;
+        const fruitsRaw = peelMass / cfg.peelPerFruit;
+        const fruits = Math.round(fruitsRaw * 2) / 2;
+        const freshOz = fruits * cfg.juicePerFruit;
+        const totalOz = pseudoOz + freshOz;
+        return { ing, totalMass, peelMass, pseudoOz, fruitsRaw, fruits, freshOz, totalOz };
+      }
+
+      function baseTotalMass(cfg) {
+        return INGREDIENTS.reduce((s, k) => s + cfg.base[k], 0);
+      }
+      function basePseudoOz(cfg) {
+        return (baseTotalMass(cfg) - cfg.base.peel) / cfg.density / ML_PER_OZ;
+      }
+      function baseFruits(cfg) {
+        return cfg.base.peel / cfg.peelPerFruit;
+      }
+      function baseTotalOz(cfg) {
+        return basePseudoOz(cfg) + baseFruits(cfg) * cfg.juicePerFruit;
+      }
+
+      function scaleFromField(cfg, field, value) {
+        if (!Number.isFinite(value) || value < 0) return null;
+        if (INGREDIENTS.includes(field)) {
+          const base = cfg.base[field];
+          if (base === 0) return null;
+          return value / base;
+        }
+        if (field === 'pseudo') return value / basePseudoOz(cfg);
+        if (field === 'total') return value / baseTotalOz(cfg);
+        if (field === 'fresh') {
+          const fruitsRaw = value / cfg.juicePerFruit;
+          const fruits = Math.round(fruitsRaw * 2) / 2;
+          const base = baseFruits(cfg);
+          if (base === 0) return null;
+          return fruits / base;
+        }
+        return null;
+      }
+
+      const fmtG = (x) => x.toFixed(1);
+      const fmtOz = (x) => x.toFixed(2);
+      const fmtRaw = (x) => x.toFixed(2);
+
+      function renderMath(cfg, c) {
+        const ing = c.ing;
+        return (
+          '<dl>' +
+          '<dt>Assumptions</dt>' +
+          '<dd>' +
+          '1 ' + cfg.fruit + ' &rarr; ' + cfg.juicePerFruit + ' oz juice, ' + cfg.peelPerFruit + ' g peel<br>' +
+          'density = ' + cfg.density + ' g/mL &middot; 1 oz = ' + ML_PER_OZ + ' mL' +
+          '</dd>' +
+          '<dt>Total ingredient mass</dt>' +
+          '<dd>' +
+          'water + sugar + peel + citric + malic + salt<br>' +
+          '= ' + fmtG(ing.water) + ' + ' + fmtG(ing.sugar) + ' + ' + fmtG(ing.peel) + ' + ' +
+          fmtG(ing.citric) + ' + ' + fmtG(ing.malic) + ' + ' + fmtG(ing.salt) + '<br>' +
+          '= ' + fmtG(c.totalMass) + ' g' +
+          '</dd>' +
+          '<dt>Pseudo juice yield</dt>' +
+          '<dd>' +
+          '(total &minus; peel) / density / mL_per_oz<br>' +
+          '= (' + fmtG(c.totalMass) + ' &minus; ' + fmtG(c.peelMass) + ') / ' + cfg.density + ' / ' + ML_PER_OZ + '<br>' +
+          '= ' + fmtG(c.totalMass - c.peelMass) + ' / ' + cfg.density + ' / ' + ML_PER_OZ + '<br>' +
+          '&approx; ' + fmtOz(c.pseudoOz) + ' oz' +
+          '</dd>' +
+          '<dt>Fresh juice yield</dt>' +
+          '<dd>' +
+          'fruits = peel / peel-per-' + cfg.fruit + ', rounded to nearest 0.5<br>' +
+          '= ' + fmtG(c.peelMass) + ' / ' + cfg.peelPerFruit + ' = ' + fmtRaw(c.fruitsRaw) +
+          ' &rarr; <strong>' + c.fruits + '</strong> ' + cfg.fruitPlural + '<br>' +
+          'juice = ' + c.fruits + ' &times; ' + cfg.juicePerFruit + ' = ' + fmtOz(c.freshOz) + ' oz' +
+          '</dd>' +
+          '<dt>Total yield</dt>' +
+          '<dd>' +
+          'pseudo + fresh = ' + fmtOz(c.pseudoOz) + ' + ' + fmtOz(c.freshOz) + ' = ' + fmtOz(c.totalOz) + ' oz' +
+          '</dd>' +
+          '</dl>'
+        );
+      }
+
+      function renderCard(card, scale, skipField) {
+        const cfg = JSON.parse(card.dataset.config);
+        const c = compute(cfg, scale);
+        const inputs = card.querySelectorAll('input[data-field]');
+        inputs.forEach((inp) => {
+          const f = inp.dataset.field;
+          if (f === skipField && document.activeElement === inp) return;
+          let v;
+          if (INGREDIENTS.includes(f)) v = fmtG(c.ing[f]);
+          else if (f === 'pseudo') v = fmtOz(c.pseudoOz);
+          else if (f === 'fresh') v = fmtOz(c.freshOz);
+          else if (f === 'total') v = fmtOz(c.totalOz);
+          if (v !== undefined) inp.value = v;
+        });
+        const mathEl = card.querySelector('[data-math]');
+        if (mathEl) mathEl.innerHTML = renderMath(cfg, c);
+      }
+
+      document.querySelectorAll('.calc').forEach((card) => {
+        const cfg = JSON.parse(card.dataset.config);
+        const state = { scale: 1 };
+        renderCard(card, state.scale);
+        card.addEventListener('input', (e) => {
+          const inp = e.target;
+          if (!(inp instanceof HTMLInputElement) || !inp.dataset.field) return;
+          if (inp.value === '') return;
+          const val = parseFloat(inp.value);
+          const newScale = scaleFromField(cfg, inp.dataset.field, val);
+          if (newScale === null || !Number.isFinite(newScale) || newScale < 0) return;
+          state.scale = newScale;
+          renderCard(card, state.scale, inp.dataset.field);
+        });
+      });
+    })();
+  </script>
+
+  <style>
+    .tools { max-width: 760px; text-align: left; }
+    .tools h1, .tools h2 { text-align: center; }
+    .tools > .muted { text-align: center; margin-bottom: 1.5rem; }
+    .calc { margin-bottom: 1.5rem; }
+    .calc h3 {
+      font-family: "Limelight", Georgia, serif;
+      font-size: 1.4rem;
+      color: var(--ocean-dark);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1rem;
+    }
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .field { margin: 0; }
+    .field > span {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .input-row input {
+      flex: 1;
+      min-width: 0;
+    }
+    .unit {
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      min-width: 1.5rem;
+    }
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 1.25rem 0;
+    }
+    .math {
+      margin-top: 1.25rem;
+      border-top: 1px dashed var(--line);
+      padding-top: 0.75rem;
+    }
+    .math summary {
+      cursor: pointer;
+      color: var(--ocean);
+      font-size: 0.9rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .math summary:hover { color: var(--ocean-dark); }
+    .math-body {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--sand);
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .math-body dl { margin: 0; }
+    .math-body dt {
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 0.75rem;
+    }
+    .math-body dt:first-child { margin-top: 0; }
+    .math-body dd {
+      margin: 0.25rem 0 0;
+      padding-left: 0.5rem;
+    }
+    .math-body strong { color: var(--ink); }
+  </style>
+</Layout>
