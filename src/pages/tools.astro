@@ -80,91 +80,89 @@ const ingredientLabels: Record<IngredientKey, string> = {
       Edit any field — the rest of the recipe scales proportionally.
     </p>
 
-    {
-      RECIPES.map((r) => {
-        const c = compute(r, 1);
-        const labels = { ...ingredientLabels, peel: r.peelLabel };
-        return (
-          <section
-            class="card calc"
-            data-recipe={r.key}
-            data-config={JSON.stringify({
-              base: r.base,
-              density: r.density,
-              juicePerFruit: r.juicePerFruit,
-              peelPerFruit: r.peelPerFruit,
-              fruit: r.fruit,
-              fruitPlural: r.fruitPlural,
-            })}
-          >
-            <h3>{r.title}</h3>
-            <div class="grid">
-              {INGREDIENTS.map((k) => (
-                <label class="field">
-                  <span>{labels[k]}</span>
-                  <div class="input-row">
+    <div class="calc-grid">
+      {
+        RECIPES.map((r) => {
+          const c = compute(r, 1);
+          const labels = { ...ingredientLabels, peel: r.peelLabel };
+          return (
+            <section
+              class="card calc"
+              data-recipe={r.key}
+              data-config={JSON.stringify({
+                base: r.base,
+                density: r.density,
+                juicePerFruit: r.juicePerFruit,
+                peelPerFruit: r.peelPerFruit,
+                fruit: r.fruit,
+                fruitPlural: r.fruitPlural,
+              })}
+            >
+              <h3>{r.title}</h3>
+              <ul class="rows">
+                {INGREDIENTS.map((k) => (
+                  <li class="field">
                     <input
                       type="number"
                       data-field={k}
                       step="0.1"
                       min="0"
                       value={fmtG(c.ing[k])}
+                      aria-label={labels[k]}
                     />
                     <span class="unit">g</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-            <div class="divider" />
-            <div class="grid">
-              <label class="field">
-                <span>Pseudo juice yield</span>
-                <div class="input-row">
+                    <span class="name">{labels[k]}</span>
+                  </li>
+                ))}
+              </ul>
+              <div class="divider" />
+              <ul class="rows">
+                <li class="field">
                   <input
                     type="number"
                     data-field="pseudo"
                     step="0.01"
                     min="0"
                     value={fmtOz(c.pseudoOz)}
+                    aria-label="Pseudo juice yield"
                   />
                   <span class="unit">oz</span>
-                </div>
-              </label>
-              <label class="field">
-                <span>Fresh {r.fruit} juice</span>
-                <div class="input-row">
+                  <span class="name">Pseudo juice yield</span>
+                </li>
+                <li class="field">
                   <input
                     type="number"
                     data-field="fresh"
                     step="0.01"
                     min="0"
                     value={fmtOz(c.freshOz)}
+                    aria-label={`Fresh ${r.fruit} juice`}
                   />
                   <span class="unit">oz</span>
-                </div>
-              </label>
-              <label class="field">
-                <span>Total yield</span>
-                <div class="input-row">
+                  <span class="name">Fresh {r.fruit} juice</span>
+                </li>
+                <li class="field">
                   <input
                     type="number"
                     data-field="total"
                     step="0.01"
                     min="0"
                     value={fmtOz(c.totalOz)}
+                    aria-label="Total yield"
                   />
                   <span class="unit">oz</span>
-                </div>
-              </label>
-            </div>
-            <details class="math">
-              <summary>Show me the math</summary>
-              <div class="math-body" data-math />
-            </details>
-          </section>
-        );
-      })
-    }
+                  <span class="name">Total yield</span>
+                </li>
+              </ul>
+              <details class="math">
+                <summary>Show me the math</summary>
+                <div class="math-body" data-math />
+              </details>
+            </section>
+          );
+        })
+      }
+    </div>
   </main>
 
   <script is:inline>
@@ -296,50 +294,60 @@ const ingredientLabels: Record<IngredientKey, string> = {
   </script>
 
   <style>
-    .tools { max-width: 760px; text-align: left; }
+    .tools { max-width: 960px; text-align: left; }
     .tools h1, .tools h2 { text-align: center; }
     .tools > .muted { text-align: center; margin-bottom: 1.5rem; }
-    .calc { margin-bottom: 1.5rem; }
-    .calc h3 {
-      font-family: "Limelight", Georgia, serif;
-      font-size: 1.4rem;
-      color: var(--ocean-dark);
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    .grid {
+    .calc-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem 1rem;
+      gap: 1.25rem;
+      align-items: start;
     }
-    @media (max-width: 480px) {
-      .grid { grid-template-columns: 1fr; }
+    @media (max-width: 720px) {
+      .calc-grid { grid-template-columns: 1fr; }
     }
-    .field { margin: 0; }
-    .field > span {
-      display: block;
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
+    .calc { margin: 0; padding: 1rem 1.1rem; }
+    .calc h3 {
+      font-family: "Limelight", Georgia, serif;
+      font-size: 1.25rem;
+      color: var(--ocean-dark);
+      margin-bottom: 0.75rem;
+      text-align: center;
     }
-    .input-row {
+    .rows {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .field {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      margin: 0;
     }
-    .input-row input {
-      flex: 1;
-      min-width: 0;
+    .field > input {
+      width: 4.5rem;
+      flex: 0 0 auto;
+      padding: 0.35rem 0.5rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
-    .unit {
+    .field > .unit {
       color: var(--ink-soft);
-      font-size: 0.9rem;
-      min-width: 1.5rem;
+      font-size: 0.85rem;
+      min-width: 1.25rem;
+    }
+    .field > .name {
+      font-weight: 600;
+      font-size: 0.92rem;
     }
     .divider {
       height: 1px;
       background: var(--line);
-      margin: 1.25rem 0;
+      margin: 0.85rem 0;
     }
     .math {
       margin-top: 1.25rem;
