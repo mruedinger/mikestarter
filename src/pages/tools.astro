@@ -98,7 +98,10 @@ const ingredientLabels: Record<IngredientKey, string> = {
                 fruitPlural: r.fruitPlural,
               })}
             >
-              <h3>{r.title}</h3>
+              <div class="card-head">
+                <h3>{r.title}</h3>
+                <button type="button" class="reset" data-reset>Reset</button>
+              </div>
               <ul class="rows">
                 {INGREDIENTS.map((k) => (
                   <li class="field">
@@ -140,6 +143,18 @@ const ingredientLabels: Record<IngredientKey, string> = {
                   />
                   <span class="unit">oz</span>
                   <span class="name">Fresh {r.fruit} juice</span>
+                </li>
+                <li class="field">
+                  <input
+                    type="number"
+                    data-field="fruits"
+                    step="0.5"
+                    min="0"
+                    value={c.fruits}
+                    aria-label={r.fruitPlural}
+                  />
+                  <span class="unit" />
+                  <span class="name">{r.fruitPlural}</span>
                 </li>
                 <li class="field">
                   <input
@@ -212,12 +227,22 @@ const ingredientLabels: Record<IngredientKey, string> = {
           if (base === 0) return null;
           return fruits / base;
         }
+        if (field === 'fruits') {
+          const fruits = Math.round(value * 2) / 2;
+          const base = baseFruits(cfg);
+          if (base === 0) return null;
+          return fruits / base;
+        }
         return null;
       }
 
       const fmtG = (x) => x.toFixed(1);
       const fmtOz = (x) => x.toFixed(2);
       const fmtRaw = (x) => x.toFixed(2);
+      const fmtFruits = (x) => {
+        const half = Math.round(x * 2) / 2;
+        return Number.isInteger(half) ? half.toString() : half.toFixed(1);
+      };
 
       function renderMath(cfg, c) {
         const ing = c.ing;
@@ -268,6 +293,7 @@ const ingredientLabels: Record<IngredientKey, string> = {
           if (INGREDIENTS.includes(f)) v = fmtG(c.ing[f]);
           else if (f === 'pseudo') v = fmtOz(c.pseudoOz);
           else if (f === 'fresh') v = fmtOz(c.freshOz);
+          else if (f === 'fruits') v = fmtFruits(c.fruits);
           else if (f === 'total') v = fmtOz(c.totalOz);
           if (v !== undefined) inp.value = v;
         });
@@ -289,6 +315,13 @@ const ingredientLabels: Record<IngredientKey, string> = {
           state.scale = newScale;
           renderCard(card, state.scale, inp.dataset.field);
         });
+        const resetBtn = card.querySelector('[data-reset]');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', () => {
+            state.scale = 1;
+            renderCard(card, state.scale);
+          });
+        }
       });
     })();
   </script>
@@ -307,12 +340,31 @@ const ingredientLabels: Record<IngredientKey, string> = {
       .calc-grid { grid-template-columns: 1fr; }
     }
     .calc { margin: 0; padding: 1rem 1.1rem; }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
     .calc h3 {
       font-family: "Limelight", Georgia, serif;
       font-size: 1.25rem;
       color: var(--ocean-dark);
-      margin-bottom: 0.75rem;
-      text-align: center;
+      margin: 0;
+    }
+    .reset {
+      background: transparent;
+      color: var(--ocean);
+      border: 1px solid var(--line);
+      padding: 0.2rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+    }
+    .reset:hover {
+      background: var(--sand);
+      color: var(--ocean-dark);
     }
     .rows {
       list-style: none;
@@ -334,6 +386,13 @@ const ingredientLabels: Record<IngredientKey, string> = {
       padding: 0.35rem 0.5rem;
       text-align: right;
       font-variant-numeric: tabular-nums;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .field > input::-webkit-outer-spin-button,
+    .field > input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
     .field > .unit {
       color: var(--ink-soft);
